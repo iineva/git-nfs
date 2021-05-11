@@ -5,5 +5,5 @@ import (
 )
 
 func TestGit(t *testing.T) {
-	Clone()
+	Start()
 }

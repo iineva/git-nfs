@@ -1,6 +1,6 @@
 # git-nfs
 
-make git repo as a nfs server file storage backend
+make git repo as a nfs server storage backend
 
 ## Getting Started
 
@@ -14,7 +14,10 @@ gitnfs -d -a ":1234" https://github.com/iineva/gitnfs
 * nfs client mount option
 
 ```shell
-mount -o "port=<port>,mountport=<port>,intr,noresvport,nolock,noacl" -t nfs localhost:/ /mount
+mkdir /tmp/test_gitnfs
+mount -o "port=1234,mountport=1234,intr,noresvport,nolock,noacl" -t nfs localhost:/ /tmp/test_gitnfs
+ls /test_gitnfs
+# umount /tmp/test_gitnfs
 ```
 
 ## Usage

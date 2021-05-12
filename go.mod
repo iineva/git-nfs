@@ -21,5 +21,5 @@ require (
 replace (
 	// afero not support get uid and gid for now, use this fork to support
 	github.com/spf13/afero => github.com/iineva/afero v1.6.1-0.20210510115905-57c673cfea7b
-	github.com/willscott/go-nfs => github.com/iineva/go-nfs v0.0.0-20210510134756-1e2b93e35fc5
+	github.com/willscott/go-nfs => github.com/iineva/go-nfs v0.0.0-20210512034119-3d40f31ee9e6
 )

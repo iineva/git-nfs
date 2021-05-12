@@ -2,10 +2,14 @@
 
 make git repo as a nfs server file storage
 
+## mount option
+
+```shell
+mount -o "port=<port>,mountport=<port>,intr,noresvport,nolock,noacl" -t nfs localhost:/ /mount
+```
 
 ## TODO
 
-* fix: 处理文件太多时，nfs不能获取到所有文件
 * optimize: 历史commit数量可设置
 * optimize: file diff when push
 * optimize: 追踪运行时间<https://github.com/jaegertracing/jaeger>

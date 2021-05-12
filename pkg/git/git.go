@@ -13,23 +13,20 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/storage/memory"
 	opentracing "github.com/opentracing/opentracing-go"
+	"go.uber.org/zap"
 
 	"github.com/iineva/git-nfs/pkg/afero2billy"
 	nfs "github.com/willscott/go-nfs"
 	"github.com/willscott/go-nfs/filesystem/basefs"
 	nfshelper "github.com/willscott/go-nfs/helpers"
 
-	"go.uber.org/zap"
+	app_logger "github.com/iineva/git-nfs/pkg/logger"
 )
 
 var logger *zap.SugaredLogger
 
 func init() {
-	l, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	logger = l.Sugar()
+	logger = app_logger.New("git-nfs")
 	// TODO: sync when exit
 	// defer logger.Sync() // flushes buffer, if any
 }
@@ -127,15 +124,10 @@ func Start() {
 
 	// sync file and push
 	const SYNC_INTERVAL = time.Second * 5
-	// count := 999000
 	go (func() {
 		for {
 			time.Sleep(SYNC_INTERVAL)
 
-			// f, _ := memFs.Create(fmt.Sprintf("%v.txt", count))
-			// f.Write([]byte("good"))
-			// f.Close()
-			// count++
 			syncToGit, ctx := opentracing.StartSpanFromContext(context.Background(), "sync-to-git")
 
 			syncAferoToBillySpan, _ := opentracing.StartSpanFromContext(ctx, "sync-afero-to-billy")

@@ -1,4 +1,4 @@
-package afero2billy
+package syncfile
 
 import (
 	"io"
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func SyncAfero2Billy(a afero.Fs, b billy.Filesystem) error {
+func Afero2Billy(a afero.Fs, b billy.Filesystem) error {
 	// remove all
 	list, err := b.ReadDir(".")
 	if err != nil {
@@ -62,7 +62,7 @@ func doSyncAfero2Billy(from afero.Fs, to billy.Filesystem, dir string) error {
 	return nil
 }
 
-func SyncBilly2Afero(b billy.Filesystem, a afero.Fs) error {
+func Billy2Afero(b billy.Filesystem, a afero.Fs) error {
 	return doSyncBilly2Afero(b, a, ".")
 }
 

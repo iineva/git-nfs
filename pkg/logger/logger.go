@@ -8,7 +8,16 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func New(name string) *zap.SugaredLogger {
+var (
+	_debug      = true
+	_baseLogger *zap.SugaredLogger
+)
+
+func Debug(debug bool) {
+	_debug = debug
+}
+
+func initBaseLogger() *zap.SugaredLogger {
 	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.ErrorLevel
 	})
@@ -17,16 +26,25 @@ func New(name string) *zap.SugaredLogger {
 	})
 	consoleDebugging := zapcore.Lock(_stdout)
 	consoleErrors := zapcore.Lock(_stderr)
-	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-	// consoleEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
-	l := zap.New(zapcore.NewTee(
+	var consoleEncoder zapcore.Encoder
+	if _debug {
+		consoleEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	} else {
+		consoleEncoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	}
+	return zap.New(zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
 		zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-	))
+	)).Sugar()
+}
 
-	logger := l.Sugar().Named(name)
+func New(name string) *zap.SugaredLogger {
+	if _baseLogger == nil {
+		_baseLogger = initBaseLogger()
+	}
+	logger := _baseLogger.Named(name)
 	signal.AddTermCallback(func(s os.Signal, done func()) {
-		logger.Infof("[logger] receive signal (%v), closing", s)
+		logger.Infof("receive signal (%v), closing", s)
 		logger.Sync()
 		done()
 	})

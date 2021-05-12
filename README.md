@@ -1,17 +1,46 @@
 # git-nfs
 
-make git repo as a nfs server file storage
+make git repo as a nfs server file storage backend
 
-## mount option
+## Getting Started
+
+* install and run
+
+```shell
+go get github.com/iineva/gitnfs
+gitnfs -d -a ":1234" https://github.com/iineva/gitnfs
+```
+
+* nfs client mount option
 
 ```shell
 mount -o "port=<port>,mountport=<port>,intr,noresvport,nolock,noacl" -t nfs localhost:/ /mount
 ```
 
+## Usage
+
+```
+Usage: gitnfs [options] <YOUR GIT REPO>
+
+Options:
+  -a string
+        nfs listen addr (default ":0")
+  -d    enable debug logs
+  -e string
+        git commit email (default "gitnfs@example.com")
+  -h    this help
+  -m string
+        git commit name (default "gitnfs")
+  -o    make nfs server readonly
+  -r string
+        git reference name (default "refs/heads/master")
+  -s duration
+        interval when sync nfs files to git repo (default 5s)
+```
+
 ## TODO
 
-* optimize: 历史commit数量可设置
-* optimize: file diff when push
-* optimize: 追踪运行时间<https://github.com/jaegertracing/jaeger>
-* optimize: 日志输出优化<https://github.com/uber-go/zap>
-* optimize: OpenTelemetry <https://openTelemetry.io>
+* feature: ability to set number of commit history
+* feature: nfs readonly mode
+* feature: docker and kubernetes depoly
+* feature: git repo auth: username, ssh

@@ -1,6 +1,12 @@
 # git-nfs
 
-make git repo as a nfs server storage backend
+Make git repo as a nfs server storage backend
+
+## Features
+
+* NFS v3
+* In memory filesystem to cache files
+* Sync files to git repository every 5s (option to set)
 
 ## Getting Started
 
@@ -8,6 +14,7 @@ make git repo as a nfs server storage backend
 
 ```shell
 go get github.com/iineva/gitnfs
+# change port number whatever you want
 gitnfs -d -a ":1234" https://github.com/iineva/gitnfs
 ```
 
@@ -16,7 +23,7 @@ gitnfs -d -a ":1234" https://github.com/iineva/gitnfs
 ```shell
 mkdir /tmp/test_gitnfs
 mount -o "port=1234,mountport=1234,intr,noresvport,nolock,noacl" -t nfs localhost:/ /tmp/test_gitnfs
-ls /test_gitnfs
+ls /tmp/test_gitnfs
 # umount /tmp/test_gitnfs
 ```
 
@@ -40,6 +47,12 @@ Options:
   -s duration
         interval when sync nfs files to git repo (default 5s)
 ```
+
+## Dependent
+
+* nfs server: <https://github.com/willscott/go-nfs> (fixed some bugs, and change filesystem to afero)
+* git client: <https://github.com/go-git/go-git>
+* filesystem: <https://github.com/spf13/afero>
 
 ## TODO
 

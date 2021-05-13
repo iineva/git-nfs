@@ -2,7 +2,6 @@ package git
 
 import (
 	go_git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
@@ -12,9 +11,10 @@ func (g *Git) Clone() error {
 		URL:           g.config.URL,
 		Depth:         g.depth(),
 		ReferenceName: g.referenceName(),
+		Auth:          g.config.Auth,
 		// Progress:      os.Stdout,
 	})
-	if err != nil && err != transport.ErrEmptyRemoteRepository {
+	if err != nil {
 		return err
 	}
 	g.repo = r

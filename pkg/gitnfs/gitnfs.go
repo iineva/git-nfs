@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	go_git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/willscott/go-nfs/filesystem"
 	"github.com/willscott/go-nfs/filesystem/basefs"
 	"go.uber.org/zap"
@@ -24,6 +25,7 @@ type Config struct {
 	GitCommitName    string
 	GitCommitEmail   string
 	GitReferenceName string
+	GitAuth          transport.AuthMethod
 	SyncInterval     time.Duration
 }
 
@@ -52,14 +54,23 @@ func (gn *GitNFS) Serve() error {
 	gn.git = git.New(git.Config{
 		FS:            gn.gitFS,
 		URL:           gn.config.GitURL,
+		Auth:          gn.config.GitAuth,
 		CommitName:    gn.config.GitCommitName,
 		CommitEmail:   gn.config.GitCommitEmail,
 		ReferenceName: gn.config.GitReferenceName,
 	})
 	err := gn.git.Clone()
 	if err != nil {
-		gn.logger.Error("clone error:", err)
-		return err
+		switch err {
+		case transport.ErrEmptyRemoteRepository:
+			gn.logger.Debug("clone: ", err)
+		case transport.ErrAuthenticationRequired, transport.ErrAuthorizationFailed, transport.ErrInvalidAuthMethod:
+			gn.logger.Error("clone: ", err)
+			return err
+		default:
+			gn.logger.Error("clone: ", err)
+			return err
+		}
 	}
 
 	// init nfs

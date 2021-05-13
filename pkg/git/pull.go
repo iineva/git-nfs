@@ -14,5 +14,6 @@ func (g *Git) Pull() error {
 		RemoteName:    g.remoteName(),
 		SingleBranch:  true,
 		ReferenceName: g.referenceName(),
+		Auth:          g.config.Auth,
 	})
 }

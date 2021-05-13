@@ -8,6 +8,7 @@ require (
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/spf13/afero v1.6.0
 	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/whilp/git-urls v1.0.0 // indirect
 	github.com/willscott/go-nfs v0.0.0-20210422193315-8a05dee1ebbe
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.16.0

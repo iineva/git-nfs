@@ -30,22 +30,32 @@ ls /tmp/test_gitnfs
 ## Usage
 
 ```
-Usage: gitnfs [options] <YOUR GIT REPO>
+Usage: gitnfs [options] <YOUR_GIT_REPO_URL>
 
 Options:
+  -K string
+        private key password
   -a string
         nfs listen addr (default ":0")
   -d    enable debug logs
   -e string
         git commit email (default "gitnfs@example.com")
+  -f string
+        private key file
   -h    this help
+  -k string
+        private key string
   -m string
         git commit name (default "gitnfs")
   -o    make nfs server readonly
+  -p string
+        basic auth password or GitHub personal access token
   -r string
-        git reference name (default "refs/heads/master")
+        git reference name (default "refs/heads/main")
   -s duration
         interval when sync nfs files to git repo (default 5s)
+  -u string
+        basic auth user name
 ```
 
 ## Dependent
@@ -56,7 +66,8 @@ Options:
 
 ## TODO
 
-* feature: ability to set number of commit history
-* feature: nfs readonly mode
-* feature: docker and kubernetes depoly
-* feature: git repo auth: username, ssh
+- [x] feature: git repo auth: username, ssh
+- [] feature: ability to set number of commit history
+- [] feature: nfs readonly mode
+- [] feature: docker and kubernetes depoly
+- [] optimize: file diff before push

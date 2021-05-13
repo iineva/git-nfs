@@ -87,6 +87,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/warpfork/go-errcat v0.0.0-20180917083543-335044ffc86e/go.mod h1:/qe02xr3jvTUz8u/PV0FHGpP8t96OQNP7U9BJMwMLEw=
 github.com/warpfork/go-wish v0.0.0-20200122115046-b9ea61034e4a/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
+github.com/whilp/git-urls v1.0.0 h1:95f6UMWN5FKW71ECsXRUd3FVYiXdrE7aX4NZKcPmIjU=
+github.com/whilp/git-urls v1.0.0/go.mod h1:J16SAmobsqc3Qcy98brfl5f5+e0clUvg1krgwk/qCfE=
 github.com/willscott/go-nfs-client v0.0.0-20200605172546-271fa9065b33 h1:Wd8wdpRzPXskyHvZLyw7Wc1fp5oCE2mhBCj7bAiibUs=
 github.com/willscott/go-nfs-client v0.0.0-20200605172546-271fa9065b33/go.mod h1:cOUKSNty+RabZqKhm5yTJT5Vq/Fe83ZRWAJ5Kj8nRes=
 github.com/willscott/memphis v0.0.0-20201122065000-f2beb41b6be3/go.mod h1:59vHBW4EpjiL5oiqgCrBp1Tc9JXRzKCNMEOaGmNfSHo=

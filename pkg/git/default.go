@@ -1,6 +1,8 @@
 package git
 
-import "github.com/go-git/go-git/v5/plumbing"
+import (
+	"github.com/go-git/go-git/v5/plumbing"
+)
 
 func (g *Git) remoteName() string {
 	remoteName := g.config.RemoteName

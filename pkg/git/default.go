@@ -6,7 +6,7 @@ import (
 
 func (g *Git) remoteName() string {
 	remoteName := g.config.RemoteName
-	if remoteName == "" {
+	if remoteName == "" && g.config.URL.Scheme != "file" {
 		remoteName = "origin"
 	}
 	return remoteName
@@ -23,7 +23,7 @@ func (g *Git) referenceName() plumbing.ReferenceName {
 func (g *Git) depth() int {
 	depth := g.config.Depth
 	if depth == 0 {
-		depth = 1
+		depth = 2
 	}
 	return depth
 }

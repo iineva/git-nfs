@@ -1,13 +1,16 @@
 package git
 
 import (
+	"net/url"
+
 	"github.com/go-git/go-billy/v5"
 	go_git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	git_urls "github.com/whilp/git-urls"
 )
 
 type Config struct {
-	URL           string               // required
+	URL           *url.URL             // required
 	ReferenceName string               // option, default: master
 	RemoteName    string               // option, default: origin
 	Depth         int                  // option, default: 1
@@ -30,4 +33,8 @@ func New(conf Config) *Git {
 func (g *Git) Close() error {
 	g.repo = nil
 	return nil
+}
+
+func Parse(s string) (*url.URL, error) {
+	return git_urls.Parse(s)
 }

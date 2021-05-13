@@ -67,6 +67,7 @@ Options:
 ## TODO
 
 - [x] feature: git repo auth: username, ssh
+- [x] feature: cache files to local dir
 - [ ] feature: ability to set number of commit history
 - [ ] feature: nfs readonly mode
 - [ ] feature: docker and kubernetes depoly

@@ -32,10 +32,14 @@ func initBaseLogger() *zap.SugaredLogger {
 	} else {
 		consoleEncoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	}
+	options := []zap.Option{zap.AddCaller()}
+	if _debug {
+		options = append(options, zap.AddStacktrace(highPriority))
+	}
 	return zap.New(zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
 		zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-	)).Sugar()
+	), options...).Sugar()
 }
 
 func New(name string) *zap.SugaredLogger {
@@ -44,7 +48,7 @@ func New(name string) *zap.SugaredLogger {
 	}
 	logger := _baseLogger.Named(name)
 	signal.AddTermCallback(func(s os.Signal, done func()) {
-		logger.Infof("receive signal (%v), closing", s)
+		logger.Infof("logger receive signal (%v), closing", s)
 		logger.Sync()
 		done()
 	})

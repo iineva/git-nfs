@@ -10,10 +10,12 @@ func (g *Git) Pull() error {
 		return err
 	}
 	return w.Pull(&go_git.PullOptions{
-		Depth:         g.depth(),
+		// TODO: fix this
+		// Depth:         g.depth(),
 		RemoteName:    g.remoteName(),
-		SingleBranch:  true,
 		ReferenceName: g.referenceName(),
+		SingleBranch:  true,
 		Auth:          g.config.Auth,
+		Force:         true,
 	})
 }

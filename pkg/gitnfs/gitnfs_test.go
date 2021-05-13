@@ -1,11 +1,19 @@
 package gitnfs
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/iineva/git-nfs/pkg/git"
+)
 
 func Test_gitnfs(t *testing.T) {
+	uri, err := git.Parse("/Users/steven/test/git-nfs-test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	conf := Config{
 		Addr:           ":5566",
-		GitURL:         "/Users/steven/test/git-nfs-test",
+		GitURL:         uri,
 		GitCommitName:  "Steven",
 		GitCommitEmail: "s@ineva.cn",
 	}
@@ -16,8 +24,7 @@ func Test_gitnfs(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-	err := gn.Close()
-	if err != nil {
+	if err := gn.Close(); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -12,8 +12,8 @@ var (
 )
 
 // hook os.Stdout output from go-nfs or other module
-func RedirectStd() {
-	f, err := os.OpenFile("/tmp/stdout-and-go-log.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0644)
+func RedirectStd(path string) {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}

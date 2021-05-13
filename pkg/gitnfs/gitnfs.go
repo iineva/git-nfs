@@ -1,12 +1,17 @@
 package gitnfs
 
 import (
+	"errors"
 	"net"
+	"net/url"
+	"os"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-billy/v5/osfs"
 	go_git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/willscott/go-nfs/filesystem"
@@ -21,12 +26,13 @@ import (
 
 type Config struct {
 	Addr             string
-	GitURL           string
+	GitURL           *url.URL
 	GitCommitName    string
 	GitCommitEmail   string
 	GitReferenceName string
 	GitAuth          transport.AuthMethod
 	SyncInterval     time.Duration
+	CacheDir         string
 }
 
 type GitNFS struct {
@@ -49,8 +55,26 @@ func New(conf Config) *GitNFS {
 
 func (gn *GitNFS) Serve() error {
 
+	if gn.hasCacheDir() {
+		if f, err := os.Stat(gn.config.CacheDir); os.IsNotExist(err) {
+			if err := os.MkdirAll(gn.config.CacheDir, 0755); err != nil {
+				return err
+			}
+		} else {
+			if !f.IsDir() {
+				return errors.New("cache path is not a dir")
+			}
+		}
+	}
+
 	// init git
-	gn.gitFS = memfs.New()
+	var gitFS billy.Filesystem = nil
+	if gn.hasCacheDir() {
+		gitFS = osfs.New(gn.config.CacheDir)
+	} else {
+		gitFS = memfs.New()
+	}
+	gn.gitFS = gitFS
 	gn.git = git.New(git.Config{
 		FS:            gn.gitFS,
 		URL:           gn.config.GitURL,
@@ -80,13 +104,23 @@ func (gn *GitNFS) Serve() error {
 		gn.logger.Errorf("listen addr: %v %v", gn.config.Addr, err)
 		return err
 	}
-	gn.nfsFS = basefs.NewMemMapFS()
+	var nfsFS filesystem.FS = nil
+	if gn.hasCacheDir() {
+		nfsFS = basefs.NewOsFS(filepath.Join(gn.config.CacheDir, git.CheckoutDir))
+	} else {
+		nfsFS = basefs.NewMemMapFS()
+	}
+	gn.nfsFS = nfsFS
+	nfsFS = basefs.NewMemMapFS()
 	gn.nfs = nfs.New(nfsListener, gn.nfsFS)
 
-	// sync file to nfs
-	if err := syncfile.Billy2Afero(gn.gitFS, gn.nfsFS); err != nil {
-		gn.logger.Error("sync git to nfs error:", err)
-		return err
+	// in memory mode, sync file to nfs
+	// TODO: avoid to copy
+	if !gn.hasCacheDir() {
+		if err := syncfile.Billy2Afero(gn.gitFS, gn.nfsFS); err != nil {
+			gn.logger.Error("sync git to nfs error:", err)
+			return err
+		}
 	}
 
 	go gn.syncLoop()
@@ -106,8 +140,12 @@ func (gn *GitNFS) syncLoop() {
 		if gn.runing <= 0 {
 			break
 		}
-		if err := syncfile.Afero2Billy(gn.nfsFS, gn.gitFS); err != nil {
-			gn.logger.Error("sync error: ", err)
+		// in memory mode, sync file
+		// TODO: avoid to copy
+		if !gn.hasCacheDir() {
+			if err := syncfile.Afero2Billy(gn.nfsFS, gn.gitFS); err != nil {
+				gn.logger.Error("sync error: ", err)
+			}
 		}
 		if err := gn.git.Commit(); err != nil {
 			gn.logger.Error("commit: ", err)
@@ -119,13 +157,13 @@ func (gn *GitNFS) syncLoop() {
 				gn.logger.Error("pull: ", err)
 			}
 		}
-		if err := gn.git.Push(); err != nil {
-			if err == go_git.NoErrAlreadyUpToDate {
-				gn.logger.Debug("push: ", err)
-			} else {
-				gn.logger.Error("push: ", err)
-			}
-		}
+		// if err := gn.git.Push(); err != nil {
+		// 	if err == go_git.NoErrAlreadyUpToDate {
+		// 		gn.logger.Debug("push: ", err)
+		// 	} else {
+		// 		gn.logger.Error("push: ", err)
+		// 	}
+		// }
 	}
 }
 
@@ -138,4 +176,8 @@ func (gn *GitNFS) Close() error {
 		return err
 	}
 	return nil
+}
+
+func (gn *GitNFS) hasCacheDir() bool {
+	return gn.config.CacheDir != ""
 }

@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/iineva/git-nfs/pkg/git"
 	"github.com/iineva/git-nfs/pkg/gitnfs"
 	"github.com/iineva/git-nfs/pkg/logger"
 	"github.com/iineva/git-nfs/pkg/signal"
-	git_urls "github.com/whilp/git-urls"
 )
 
 // cli args
@@ -25,8 +26,10 @@ type Args struct {
 	SyncInterval time.Duration
 
 	// nfs
-	Addr     string
-	Readonly bool
+	Addr           string
+	Readonly       bool
+	CacheDir       string
+	CacheDirDelete bool
 
 	// git
 	GitURL           string
@@ -48,6 +51,8 @@ func parseArgs(args *Args) error {
 
 	flag.BoolVar(&args.Help, "h", false, "this help")
 	flag.BoolVar(&args.Debug, "d", false, "enable debug logs")
+	flag.StringVar(&args.CacheDir, "c", "", "file cache dir, if it's empty will storage files in memery")
+	flag.BoolVar(&args.CacheDirDelete, "z", false, "delete file cache dir when exit")
 
 	flag.StringVar(&args.Addr, "a", ":0", "nfs listen addr")
 	flag.BoolVar(&args.Readonly, "o", false, "make nfs server readonly")
@@ -91,37 +96,37 @@ func main() {
 	}
 
 	// save memory
-	debug.SetGCPercent(1)
+	if args.CacheDir == "" {
+		debug.SetGCPercent(1)
+	}
 
 	// setup log
-	logger.RedirectStd()
+	logger.RedirectStd("/dev/null")
 	logger.Debug(args.Debug)
 	log := logger.New("main")
 	log.Debugf("args: %+v", args)
 
 	var auth transport.AuthMethod = nil
-	if args.GitSSHKey != "" || args.GitSSHKeyFile != "" {
-		uri, err := git_urls.Parse(args.GitURL)
+	uri, err := git.Parse(args.GitURL)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(-1)
+	}
+	if args.GitSSHKey != "" {
+		publicKeys, err := ssh.NewPublicKeys(uri.User.Username(), []byte(args.GitSSHKey), args.GitSSHKeyPassword)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("ssh private key file ", err)
 			os.Exit(-1)
 		}
-		if args.GitSSHKey != "" {
-			publicKeys, err := ssh.NewPublicKeys(uri.User.Username(), []byte(args.GitSSHKey), args.GitSSHKeyPassword)
-			if err != nil {
-				log.Fatal("ssh private key file ", err)
-				os.Exit(-1)
-			}
-			log.Debug(publicKeys)
-			auth = publicKeys
-		} else if args.GitSSHKeyFile != "" {
-			publicKeys, err := ssh.NewPublicKeysFromFile(uri.User.Username(), args.GitSSHKeyFile, args.GitSSHKeyPassword)
-			if err != nil {
-				log.Fatal("ssh private key file ", err)
-				os.Exit(-1)
-			}
-			auth = publicKeys
+		log.Debug(publicKeys)
+		auth = publicKeys
+	} else if args.GitSSHKeyFile != "" {
+		publicKeys, err := ssh.NewPublicKeysFromFile(uri.User.Username(), args.GitSSHKeyFile, args.GitSSHKeyPassword)
+		if err != nil {
+			log.Fatal("ssh private key file ", err)
+			os.Exit(-1)
 		}
+		auth = publicKeys
 	} else if args.GitUsername != "" {
 		auth = &http.BasicAuth{
 			Username: args.GitUsername,
@@ -132,21 +137,34 @@ func main() {
 	log.Infof("server starting addr %v", args.Addr)
 	gn := gitnfs.New(gitnfs.Config{
 		Addr:             args.Addr,
-		GitURL:           args.GitURL,
+		GitURL:           uri,
 		GitAuth:          auth,
 		GitCommitName:    args.GitCommitName,
 		GitCommitEmail:   args.GitCommitEmail,
 		GitReferenceName: args.GitReferenceName,
 		SyncInterval:     args.SyncInterval,
+		CacheDir:         args.CacheDir,
 	})
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
 	signal.AddTermCallback(func(s os.Signal, done func()) {
 		gn.Close()
+		if args.CacheDir != "" && args.CacheDirDelete {
+			if err := os.RemoveAll(args.CacheDir); err != nil {
+				log.Error(err)
+			} else {
+				log.Info("cache dir is deleted")
+			}
+		}
+		waitGroup.Done()
 		done()
 	})
-	err := gn.Serve()
+	err = gn.Serve()
 	if err != nil {
 		log.Error(err)
 	}
+	// wait until cleanup
+	waitGroup.Wait()
 }
 
 func usage() {

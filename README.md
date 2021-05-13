@@ -67,7 +67,7 @@ Options:
 ## TODO
 
 - [x] feature: git repo auth: username, ssh
-- [] feature: ability to set number of commit history
-- [] feature: nfs readonly mode
-- [] feature: docker and kubernetes depoly
-- [] optimize: file diff before push
+- [ ] feature: ability to set number of commit history
+- [ ] feature: nfs readonly mode
+- [ ] feature: docker and kubernetes depoly
+- [ ] optimize: file diff before push

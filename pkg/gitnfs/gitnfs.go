@@ -14,6 +14,7 @@ import (
 	"github.com/go-git/go-billy/v5/osfs"
 	go_git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/spf13/afero"
 	"github.com/willscott/go-nfs/filesystem"
 	"github.com/willscott/go-nfs/filesystem/basefs"
 	"go.uber.org/zap"
@@ -33,6 +34,7 @@ type Config struct {
 	GitAuth          transport.AuthMethod
 	SyncInterval     time.Duration
 	CacheDir         string
+	Readonly         bool
 }
 
 type GitNFS struct {
@@ -110,8 +112,12 @@ func (gn *GitNFS) Serve() error {
 	} else {
 		nfsFS = basefs.NewMemMapFS()
 	}
+	if gn.config.Readonly {
+		if fs, ok := nfsFS.(basefs.BaseFS); ok {
+			fs.SetSource(afero.NewReadOnlyFs(fs.GetSource()))
+		}
+	}
 	gn.nfsFS = nfsFS
-	nfsFS = basefs.NewMemMapFS()
 	gn.nfs = nfs.New(nfsListener, gn.nfsFS)
 
 	// in memory mode, sync file to nfs
@@ -123,7 +129,9 @@ func (gn *GitNFS) Serve() error {
 		}
 	}
 
-	go gn.syncLoop()
+	if !gn.config.Readonly {
+		go gn.syncLoop()
+	}
 
 	return gn.nfs.Serve()
 }
@@ -157,13 +165,13 @@ func (gn *GitNFS) syncLoop() {
 				gn.logger.Error("pull: ", err)
 			}
 		}
-		// if err := gn.git.Push(); err != nil {
-		// 	if err == go_git.NoErrAlreadyUpToDate {
-		// 		gn.logger.Debug("push: ", err)
-		// 	} else {
-		// 		gn.logger.Error("push: ", err)
-		// 	}
-		// }
+		if err := gn.git.Push(); err != nil {
+			if err == go_git.NoErrAlreadyUpToDate {
+				gn.logger.Debug("push: ", err)
+			} else {
+				gn.logger.Error("push: ", err)
+			}
+		}
 	}
 }
 

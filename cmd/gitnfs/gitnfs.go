@@ -90,11 +90,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// TODO:
-	if args.Readonly {
-		panic(errors.New("readonly mode is not yet implement"))
-	}
-
 	// save memory
 	if args.CacheDir == "" {
 		debug.SetGCPercent(1)
@@ -144,6 +139,7 @@ func main() {
 		GitReferenceName: args.GitReferenceName,
 		SyncInterval:     args.SyncInterval,
 		CacheDir:         args.CacheDir,
+		Readonly:         args.Readonly,
 	})
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(1)

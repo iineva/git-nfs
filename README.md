@@ -10,12 +10,13 @@ Make git repo as a nfs server storage backend
 
 ## Getting Started
 
-* install and run
+* build and run
 
 ```shell
-go get github.com/iineva/gitnfs
+git clone github.com/iineva/git-nfs
+cd git-nfs/cmd/gitnfs/
 # change port number whatever you want
-gitnfs -d -a ":1234" https://github.com/iineva/gitnfs
+go run gitnfs.go -d -a ":1234" https://github.com/iineva/git-nfs
 ```
 
 * nfs client mount option
